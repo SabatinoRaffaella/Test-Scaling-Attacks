@@ -6,7 +6,7 @@ Il dataset utilizzato è TinyImageNET per le sue dimensioni che pertono testing 
 
 Disponibile al link:
 
-https://www.kaggle.com/c/tiny-imagenet} 
+https://www.kaggle.com/c/tiny-imagenet
 Paper originale: 
 
-https://cs231n.stanford.edu/reports/2017/pdfs/930.pdf};
+https://cs231n.stanford.edu/reports/2017/pdfs/930.pdf
