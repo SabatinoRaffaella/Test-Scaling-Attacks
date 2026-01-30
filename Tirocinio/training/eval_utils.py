@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from scaling.PillowScaler import PillowScaler
-from utils.image_utilities import save_correct_adv_and_jpeg, save_correctly_classified_images
+from utils.image_utilities import save_correct_adv_and_jpeg, save_correctly_classified_images, save_clean_samples 
 
 @torch.no_grad()
 def evaluate(model, val_loader, device):
@@ -91,9 +91,10 @@ def evaluate_jpeg_recovery(model: nn.Module, attacked_images: torch.Tensor,
                            normalize_fn: callable,
                            clean_correct,
                            adv_correct,
+                           clean_images: torch.Tensor,
                            save_dir,
                            prefix="",
-                           save_adv_and_jpeg=False):
+                           save_adv_and_jpeg=True):
     """
     Evaluate model accuracy after compressing attacked images at multiple JPEG quality levels.
 
@@ -139,6 +140,26 @@ def evaluate_jpeg_recovery(model: nn.Module, attacked_images: torch.Tensor,
         
         if save_adv_and_jpeg:
           recovered_mask = clean_correct & (~adv_correct) & jpeg_correct  
+          recovered_idx = recovered_mask.nonzero(as_tuple=False).squeeze(1)
+
+          if recovered_idx.numel() == 0:
+              continue
+
+          idx = recovered_idx[0].item()
+          # --- Slice aligned triplet ---
+          clean_img = clean_images[idx:idx+1]
+          adv_img   = attacked_images[idx:idx+1]
+          jpeg_img  = decoded_batch[idx:idx+1]
+          label     = labels[idx:idx+1]
+          # --- SAVE CLEAN ---
+          save_clean_samples(
+              images=clean_img,
+              labels=label,
+              correct_mask=torch.tensor([True]),
+              save_dir=save_dir,
+              prefix=f"{prefix}_idx{idx}",
+              max_samples=1,
+          )
 
           save_correct_adv_and_jpeg(
               adv_images=attacked_images,
