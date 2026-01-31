@@ -127,33 +127,8 @@ def save_adv_examples(
     return {"orig": orig_path, "adv": adv_path, "diff": diff_path}
 
 
-def save_clean_samples(
-    images: torch.Tensor,
-    labels: torch.Tensor,
-    correct_mask: torch.Tensor,
-    save_dir: str,
-    prefix: str = "",
-    max_samples: int = 8,
-):
-    """
-    Save clean correctly-classified images.
-    images must be in [0,1], shape [B,C,H,W]
-    """
-    os.makedirs(save_dir, exist_ok=True)
-
-    idxs = correct_mask.nonzero(as_tuple=True)[0][:max_samples]
-    if len(idxs) == 0:
-        return
-
-    imgs = images[idxs].cpu()
-
-    for i, img in enumerate(imgs):
-        fname = f"{prefix}_clean_{i}.png"
-        tv_utils.save_image(img, os.path.join(save_dir, fname))
-
-
-
-def save_correct_adv_and_jpeg(
+def save_correct_clean_adv_and_jpeg(
+        clean_images: torch.Tensor, # [B,C,H,W] in [0,1]
         adv_images: torch.Tensor,  # [B,C,H,W] in [0,1]
         jpeg_images: torch.Tensor,  # [B,C,H,W] in [0,1]
         correct_mask: torch.Tensor,  # [B] bool
@@ -188,11 +163,15 @@ def save_correct_adv_and_jpeg(
         correct_indices = random.sample(correct_indices, max_samples)
 
     for k, idx in enumerate(correct_indices):
+        clean = clean_images[idx]
         adv = adv_images[idx]
         jpeg = jpeg_images[idx]
 
-        base = f"{prefix}_sample{k:03d}"
+        base = f"{prefix}_idx{idx:03d}"
 
+        tv_utils.save_image(
+            clean, os.path.join(save_dir, f"{base}_clean.png")
+        )
         tv_utils.save_image(
             adv, os.path.join(save_dir, f"{base}_adv.png")
         )
