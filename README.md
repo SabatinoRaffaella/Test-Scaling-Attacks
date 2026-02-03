@@ -2,7 +2,7 @@ Si sono effettuati degli esperimenti usando la libreria Pillow per la compressio
 
 L'obbiettivo era quello di rimuovere le perturbazioni ad alta frequenza introdotte da scaling attacks.
 
-Il dataset utilizzato è TinyImageNET per le sue dimensioni che pertono testing su un buon quantitativo di immagini.
+Il dataset utilizzato è TinyImageNET per le sue dimensioni che permettono testing su un buon quantitativo di immagini.
 
 Disponibile al link:
 
