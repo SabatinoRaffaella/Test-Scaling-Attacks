@@ -49,6 +49,35 @@ def make_model(name: str, num_classes: int, pretrained=True, device=None):
     return model
 
 
+def get_num_classes(model):
+    """
+    Restituisce il numero di classi dalla testa del classificatore.
+    """
+    # 1) Explicit attribute (best case)
+    if hasattr(model, "num_classes") and model.num_classes is not None:
+        return model.num_classes
+
+    # 2) ResNet / DenseNet style
+    if hasattr(model, "fc") and hasattr(model.fc, "out_features"):
+        return model.fc.out_features
+
+    # 3) EfficientNet / MobileNet / ConvNeXt style
+    if hasattr(model, "classifier"):
+        classifier = model.classifier
+
+        # Sequential case (EfficientNet, MobileNet)
+        if hasattr(classifier, "__iter__"):
+            for m in reversed(classifier):
+                if hasattr(m, "out_features"):
+                    return m.out_features
+
+        # Single Linear
+        if hasattr(classifier, "out_features"):
+            return classifier.out_features
+
+    raise ValueError("Cannot infer number of classes from model")
+
+
 def get_classifier_module(model):
     """
     Return (module, name) for the classifier/head of a timm model.

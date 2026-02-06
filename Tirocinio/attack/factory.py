@@ -1,7 +1,7 @@
 import torch
 import torchattacks
 from torch import nn
-
+from training.classifier_utilities import get_num_classes
 
 def attack_factory(name: str, model: nn.Module, device: torch.device, eps=8/255, steps=40, alpha=None, **kwargs):
     """
@@ -13,12 +13,13 @@ def attack_factory(name: str, model: nn.Module, device: torch.device, eps=8/255,
     name = name.lower()
     if name == "autoattack":
         # torchattacks.AutoAttack signature your project used:
+        n_classes = kwargs.get("num_classes", get_num_classes(model))
         atk = torchattacks.AutoAttack(
             model,
             'Linf',
             eps,
             'standard',
-            kwargs.get('num_classes', getattr(model, 'num_classes', None) or kwargs.get('num_classes', 1000)),
+            n_classes,
             kwargs.get('seed', 0),
             kwargs.get('verbose', False)
         )

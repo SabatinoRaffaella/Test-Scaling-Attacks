@@ -48,21 +48,19 @@ def finetune_classifier(model: nn.Module,
     # --- Unwrap to base model ---
     base = unwrap_model(model)
 
-    # Reset classifier if requested
-    if n_classes is not None:
-        reset_classifier_to_n(base, n_classes)
-
-        # --- Find classifier module ---
-        parent, child_name, cls = find_classifier_module(base)
-        if isinstance(cls, nn.Sequential):
-            head_params = cls[-1].parameters()
-        elif isinstance(cls, nn.Linear):
-            head_params = cls.parameters()
+        # --- Infer n_classes if not provided ---
+    if n_classes is None:
+        if hasattr(train_loader.dataset, "classes"):
+            n_classes = len(train_loader.dataset.classes)
+            print(f"[INFO] Inferred n_classes={n_classes} from dataset")
         else:
-            found = next((m.parameters() for m in cls.modules() if isinstance(m, nn.Linear)), None)
-            if found is None:
-                raise RuntimeError("No Linear layer found in classifier")
-            head_params = found
+            raise RuntimeError("Cannot infer number of classes from dataset")
+
+    # --- Reset classifier ---
+    reset_classifier_to_n(base, n_classes)
+    base.num_classes = n_classes
+    base.to(device)  
+
     # --- Optimizer setup ---
     if freeze_backbone_flag:
         freeze_backbone(model)
