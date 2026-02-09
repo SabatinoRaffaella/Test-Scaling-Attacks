@@ -13,13 +13,12 @@ def attack_factory(name: str, model: nn.Module, device: torch.device, eps=8/255,
     name = name.lower()
     if name == "autoattack":
         # torchattacks.AutoAttack signature your project used:
-        n_classes = kwargs.get("num_classes", get_num_classes(model))
         atk = torchattacks.AutoAttack(
             model,
             'Linf',
             eps,
             'standard',
-            n_classes,
+            200,
             kwargs.get('seed', 0),
             kwargs.get('verbose', False)
         )
