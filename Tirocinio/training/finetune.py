@@ -5,7 +5,9 @@ from utils.path_handling import prepare_checkpoint_dir
 from .classifier_utilities import (
     freeze_backbone,
     reset_classifier_to_n,
-    unwrap_model, find_classifier_module
+    unwrap_model, find_classifier_module,
+    freeze_all,
+    unfreeze_resnet_layer4
 )
 
 from .train_utils import setup_optimizer, setup_scheduler
@@ -18,7 +20,7 @@ def finetune_classifier(model: nn.Module,
                         device,
                         epochs: int = 5,
                         lr: float = 1e-3,
-                        freeze_backbone_flag: bool = True,
+                        freeze_backbone_flag: str = "layer4",
                         n_classes: Optional[int] = None,
                         model_name: str = "model",
                         out_dir: str = None):
@@ -45,8 +47,12 @@ def finetune_classifier(model: nn.Module,
 
     # --- Training logic below ---
     print (f"[INFO] No checkpoint found for '{model_name}', training for {epochs} epochs...")
-    # --- Unwrap to base model ---
-    base = unwrap_model(model)
+    # --- Unwrap to base model --- 
+    step1_ckpt = "/content/Tirocinio/attack_results/checkpoints/resnet18_step1.pth" 
+    base = unwrap_model(model) # unwrap first 
+    state = torch.load(step1_ckpt, map_location=device) 
+    print(f"DEBUG: STEP1 Recuperato") 
+    base.load_state_dict(state) # load weights into base base.to(device)
 
         # --- Infer n_classes if not provided ---
     if n_classes is None:
@@ -62,8 +68,13 @@ def finetune_classifier(model: nn.Module,
     base.to(device)  
 
     # --- Optimizer setup ---
-    if freeze_backbone_flag:
-        freeze_backbone(model)
+    if freeze_backbone_flag == "head":
+      freeze_backbone(model)
+
+    elif freeze_backbone_flag == "layer4":
+      print(f"INFO: Training Layer 4")
+      freeze_all(model)
+      unfreeze_resnet_layer4(model)
 
     optimizer = setup_optimizer(model, lr)
     scheduler = setup_scheduler(optimizer)
